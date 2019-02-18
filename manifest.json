@@ -1,0 +1,16 @@
+{
+  "manifest_version": 2,
+
+  "name": "Nano Pay",
+  "description": "A extension that let you see which nano address is present on your browser and allow you to pay fast via Brainblocks service",
+  "version": "0.01",
+  "permissions": ["tabs", "<all_urls>", "clipboardWrite","clipboardRead"],
+  "icons": {
+    "128": "nano_icon.png"
+  },
+  "content_security_policy": "script-src 'self' https://brainblocks.io/brainblocks.min.js; object-src 'self'",
+  "browser_action": {
+    "default_icon": "nano_icon.png",
+    "default_popup": "popup.html"
+  }
+}
