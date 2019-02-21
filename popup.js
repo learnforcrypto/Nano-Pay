@@ -1,8 +1,11 @@
+// Variable
 let initVerif = false;
 let init = false; 
 let selectedAddress = 0;
 let listAddress = [];
+let portPipe;
 
+// Function utiliser pour call api
 function httpGet(theUrl)
 {
     var xmlHttp = new XMLHttpRequest();
@@ -11,6 +14,7 @@ function httpGet(theUrl)
     return xmlHttp.responseText;
 }
 
+// Return array of indice position 
 function getIndicesOf(searchStr, str, caseSensitive) {
     var searchStrLen = searchStr.length;
     if (searchStrLen == 0) {
@@ -42,20 +46,33 @@ function GetAddressType(description)
     }
 }
 
-// Return true or false if real address
+// Return true or false if real address // TODO call nano ninja to verify if address exists on the network
 function DescriptionHasNanoAddress(description)
 {
     return description.includes("xrb_") || description.includes("nano_"); 
 }
 
-
+// Syntax check for nano address
 function IsFalseNanoAddress(address)
 {
     var format = /[ !@#$%^&*()+\-=\[\]{};':"\\|,.<>\/?]/;
     return format.test(address);
 }
 
-// Return the actual nano wallet address 
+function DoesAddressExistOnNetwork(address)
+{
+    let url = "https://mynano.ninja/api/accounts/" + address + "/info";
+    let resp = JSON.parse(httpGet(url));
+
+    if(resp.error == "Bad account number")
+    {
+        return false;
+    }
+
+    return true;
+}
+
+// Return an array of nano adddress contained in the description 
 function GetNanoAddress(description)
 {
     let returnAddress = [];
@@ -82,84 +99,57 @@ function GetNanoAddress(description)
 
     });
     
-
-    console.log(returnAddress);
    // return returnAddress;
     return [... new Set(returnAddress)];
 }
 
-
-console.log("Document Verification");
-chrome.runtime.onMessage.addListener(function(request, sender) {
-
-    if(!initVerif){
-
-        if (request.action == "getSource") {
-           
-    
-            if(DescriptionHasNanoAddress(request.source))
-            {
-                let nanoAddress = GetNanoAddress(request.source);
-                console.log(nanoAddress);
-
-                if(typeof nanoAddress !== 'undefined' && nanoAddress.length > 0 )
-                {
-                    listAddress = nanoAddress;
-                    UpdateMessage();
-                }
-                else
-                {
-                    message.innerText = "No nano address found";
-                }
-               
-            }
-            else
-            {
-                message.innerText = "No nano address found";
-            }
-
-            initVerif = true;
-        }
-    }
-
-});
-
 document.addEventListener('copy', function(e) {
     e.clipboardData.setData('text/plain', listAddress[selectedAddress]);
     e.preventDefault();
-  });
+});
+
+function CopyToClipboard()
+{
+    document.execCommand('copy');
+}
+
+function SendScrollMessage()
+{
+    portPipe.postMessage({address: listAddress[selectedAddress]});
+}
+
+function HandleAddressClick()
+{
+    CopyToClipboard();
+    SendScrollMessage();
+}
 
 function UpdateMessage()
 {
-    let nanodeAddress = "https://www.nanode.co/account/" + listAddress[selectedAddress]
-    message.innerHTML = "<a id='messageLink'  href='" + nanodeAddress +  "'>" + listAddress[selectedAddress]  + "</a>" ;
+    message.innerHTML = "<a id='messageLink' style='cursor:pointer;color:#3572f4;text-decoration:underline;'>" + listAddress[selectedAddress]  + "</a>" ;
     message.innerHTML += "<br>" + (selectedAddress + 1 ) + "/" + listAddress.length;
-    document.getElementById("messageLink").addEventListener("click", CopyToClipboard);
+    if(listAddress[selectedAddress])
+    {
+        document.getElementsByTagName("body")[0].setAttribute("style","min-width:540px;");
+    }
 
-   
+    document.getElementById("messageLink").addEventListener("click", HandleAddressClick);
 }
 
+// Update price ticker according to the amount
 function UpdatePrice()
 {
-    // 
-    console.log("Update price");
     let element = document.getElementById("nano_amount");
     if(element && element.value && element.value > 0)
     {
         let elemPrice = document.getElementById("price_tag");
         let resp = JSON.parse(httpGet("https://min-api.cryptocompare.com/data/pricemulti?fsyms=NANO&tsyms=BTC,USD,EUR&api_key=6adba1b1c5bfc11a8b427216403e62d9908b0936bff3189fccdb91218f89506b"));
 
-        console.log(resp);
         let amount = element.value;
         let finalString = (amount * resp.NANO.BTC).toFixed(7) + " BTC"+ "<br/>" + (amount * resp.NANO.EUR).toFixed(2) + " EUR"+ "<br/>" + (amount * resp.NANO.USD).toFixed(2) + " USD";
 
         elemPrice.innerHTML = finalString;
     }
-}
-
-function CopyToClipboard()
-{
-    document.execCommand('copy');
 }
 
 function DecrementSelectedAddress()
@@ -196,46 +186,19 @@ function MouseOut()
 
 function CreateNewTab()
 {
-    chrome.tabs.create({url: "https://nano.org/en"});
-}
-
-function onWindowLoad() {
-
-    var message = document.querySelector('#message');
-
-    document.getElementById("tip_button").addEventListener("click", TipButtonPressed);
-
-    document.getElementById("image_logo").addEventListener("click", CreateNewTab);
-
-    document.getElementById("nano_amount").addEventListener("keyup", UpdatePrice);
-    document.getElementById("nano_amount").addEventListener("mouseup", UpdatePrice);
-
-    document.getElementById("rightArrow").addEventListener("click", IncrementSelectedAddress);
-    document.getElementById("leftArrow").addEventListener("click", DecrementSelectedAddress);
-
-    document.getElementById("rightArrow").addEventListener("mouseover", MouseOver);
-    document.getElementById("rightArrow").addEventListener("mouseout", MouseOut);
-
-    document.getElementById("leftArrow").addEventListener("mouseover", MouseOver);
-    document.getElementById("leftArrow").addEventListener("mouseout", MouseOut);
-  
-    if(!init)
+    if(listAddress[selectedAddress] && !IsFalseNanoAddress(listAddress[selectedAddress]) && DoesAddressExistOnNetwork(listAddress[selectedAddress]))
     {
-        chrome.tabs.executeScript(null, {
-            file: "getPageSources.js"
-          }, function() {
-            // If you try and inject into an extensions page or the webstore/NTP you'll get an error
-            if (chrome.runtime.lastError) {
-              message.innerText = "You can't use the extension here !";
-            }
-          });
-
-        init = true;
+        let nanodeAddress = "https://www.nanode.co/account/" + listAddress[selectedAddress]
+        chrome.tabs.create({url: nanodeAddress});
     }
-
+    else
+    {
+        chrome.tabs.create({url: "https://nano.org/en"});
+    }
 }
-window.onload = onWindowLoad;
 
+
+// Function used to hide everything on the page except the brainblocks button
 function hideStuff(){
     var el = document.querySelector('#content_container');
     var node, nodes = [];
@@ -267,14 +230,11 @@ function hideStuff(){
 
 function TipButtonPressed()
 {
-    if(listAddress.length > 0 && listAddress[selectedAddress] && !IsFalseNanoAddress(listAddress[selectedAddress]) )
+    if(listAddress.length > 0 && listAddress[selectedAddress] && !IsFalseNanoAddress(listAddress[selectedAddress]) && DoesAddressExistOnNetwork(listAddress[selectedAddress]) )
     {
-
         let nbreNano = document.getElementById("nano_amount").value;
         if(nbreNano >= 0.000001)
         {
-            console.log("Nobre nano : ", nbreNano);
-            console.log("Address : ", listAddress[selectedAddress]);
 
             let nanoToRai = nbreNano * 1000000;
 
@@ -295,6 +255,10 @@ function TipButtonPressed()
                 }
                 }, '#nano-button');
 
+
+            // Change window size
+            document.getElementsByTagName("body")[0].setAttribute("style","min-width:230px;");
+
             // Make sure brainblocks button is visible
             let brainblocksButton = document.getElementById("nano-button");
             brainblocksButton.style.display = 'block';
@@ -303,3 +267,100 @@ function TipButtonPressed()
     }
 }
 
+
+function onWindowLoad() {
+
+    var message = document.querySelector('#message');
+
+    document.getElementById("tip_button").addEventListener("click", TipButtonPressed);
+
+    document.getElementById("image_logo").addEventListener("click", CreateNewTab);
+
+    document.getElementById("nano_amount").addEventListener("keyup", UpdatePrice);
+    document.getElementById("nano_amount").addEventListener("mouseup", UpdatePrice);
+
+    document.getElementById("rightArrow").addEventListener("click", IncrementSelectedAddress);
+    document.getElementById("leftArrow").addEventListener("click", DecrementSelectedAddress);
+
+    document.getElementById("rightArrow").addEventListener("mouseover", MouseOver);
+    document.getElementById("rightArrow").addEventListener("mouseout", MouseOut);
+
+    document.getElementById("leftArrow").addEventListener("mouseover", MouseOver);
+    document.getElementById("leftArrow").addEventListener("mouseout", MouseOut);
+  
+    if(!init)
+    {
+        // Inject script to retrieve the source code of the current tab
+        chrome.tabs.executeScript(null, {
+            file: "getPageSources.js"
+          }, function() {
+            // If you try and inject into an extensions page or the webstore/NTP you'll get an error
+            if (chrome.runtime.lastError) {
+              message.innerText = "You can't use the extension here !";
+            }
+          });
+
+          // Inject script to scroll through the address on click
+          chrome.tabs.executeScript(null, {
+            file: "scrollToAddress.js"
+          }, function() {
+            // If you try and inject into an extensions page or the webstore/NTP you'll get an error
+            if (chrome.runtime.lastError) {
+              message.innerText = "You can't use the extension here !";
+            }
+          });
+
+
+        init = true;
+    }
+
+}
+window.onload = onWindowLoad;
+
+console.log("Document Verification");
+chrome.runtime.onMessage.addListener(function(request, sender) {
+
+    if(!initVerif){
+
+        if (request.action == "getSource") {
+           
+    
+            if(DescriptionHasNanoAddress(request.source))
+            {
+                let nanoAddress = GetNanoAddress(request.source);
+
+                if(typeof nanoAddress !== 'undefined' && nanoAddress.length > 0 )
+                {
+                    listAddress = nanoAddress;
+                    UpdateMessage();
+                }
+                else
+                {
+                    message.innerText = "No nano address found";
+                }
+               
+            }
+            else
+            {
+                message.innerText = "No nano address found";
+            }
+
+            initVerif = true;
+        }
+    }
+
+});
+
+
+chrome.runtime.onConnect.addListener(function(port) {
+    console.assert(port.name == "nano-pay");
+    portPipe = port;
+
+    port.onMessage.addListener(function(msg) {
+        if(msg.init != "success")
+        {
+            message.innerText = "Failed to communicate with scrollToAddress script";
+        }
+    });
+
+});

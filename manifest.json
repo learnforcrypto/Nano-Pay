@@ -12,5 +12,8 @@
   "browser_action": {
     "default_icon": "nano_icon.png",
     "default_popup": "popup.html"
-  }
+  },
+  "web_accessible_resources": [
+    "findAndReplaceDOMText.js"
+  ]
 }
