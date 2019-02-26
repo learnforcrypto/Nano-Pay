@@ -130,7 +130,7 @@ function UpdateMessage()
     message.innerHTML += "<br>" + (selectedAddress + 1 ) + "/" + listAddress.length;
     if(listAddress[selectedAddress])
     {
-        document.getElementsByTagName("body")[0].setAttribute("style","min-width:540px;");
+        document.getElementsByTagName("body")[0].setAttribute("style","min-width:500px;");
     }
 
     document.getElementById("messageLink").addEventListener("click", HandleAddressClick);
@@ -154,7 +154,6 @@ function UpdatePrice()
 
 function DecrementSelectedAddress()
 {
-    console.log("Decrement");
     if(listAddress[selectedAddress -1] != undefined)
     {
         selectedAddress--;
@@ -164,7 +163,6 @@ function DecrementSelectedAddress()
 
 function IncrementSelectedAddress()
 {
-    console.log("Increment");
     if(listAddress[selectedAddress+1] != undefined)
     {
         selectedAddress++;
@@ -184,19 +182,28 @@ function MouseOut()
     document.getElementById("leftArrow").style.color = "#EC6022";
 }
 
-function CreateNewTab()
+function CreateNewTab(url)
+{
+    chrome.tabs.create({url: url});
+}
+
+function DonationButtonPressed()
+{
+    CreateNewTab("https://www.nanode.co/account/xrb_3cdcbwubbbief9eoqhx1e9piq6g9hpek7jssegoc4nc1ezkeaet8fyzf5mmi");
+}
+
+function ImageLogoPressed()
 {
     if(listAddress[selectedAddress] && !IsFalseNanoAddress(listAddress[selectedAddress]) && DoesAddressExistOnNetwork(listAddress[selectedAddress]))
     {
         let nanodeAddress = "https://www.nanode.co/account/" + listAddress[selectedAddress]
-        chrome.tabs.create({url: nanodeAddress});
+        CreateNewTab(nanodeAddress);
     }
     else
     {
-        chrome.tabs.create({url: "https://nano.org/en"});
+        CreateNewTab("https://nano.org/en");
     }
 }
-
 
 // Function used to hide everything on the page except the brainblocks button
 function hideStuff(){
@@ -268,13 +275,18 @@ function TipButtonPressed()
 }
 
 
+
+
+
 function onWindowLoad() {
 
     var message = document.querySelector('#message');
 
     document.getElementById("tip_button").addEventListener("click", TipButtonPressed);
 
-    document.getElementById("image_logo").addEventListener("click", CreateNewTab);
+    document.getElementById("donation").addEventListener("click", DonationButtonPressed);
+
+    document.getElementById("image_logo").addEventListener("click", ImageLogoPressed);
 
     document.getElementById("nano_amount").addEventListener("keyup", UpdatePrice);
     document.getElementById("nano_amount").addEventListener("mouseup", UpdatePrice);
@@ -317,7 +329,6 @@ function onWindowLoad() {
 }
 window.onload = onWindowLoad;
 
-console.log("Document Verification");
 chrome.runtime.onMessage.addListener(function(request, sender) {
 
     if(!initVerif){

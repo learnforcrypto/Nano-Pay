@@ -644,7 +644,6 @@
 /*************/
 
 
-console.log("Scroll to address");
 
 // List of tag the address has = {xrb_1234 : 'nano-pay0'}
 var listTag = [];
@@ -725,7 +724,6 @@ function HandleMessage(address)
 port.onMessage.addListener(function(msg) {
     if(msg.address)
     {
-        console.log("Processing ", msg.address);
         HandleMessage(msg.address);
     }
 });
