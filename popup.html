@@ -12,20 +12,31 @@
 
         <script src="popup.js"></script>
         <script src="brainblocks.js"></script>
+        <script src="kjua-0.1.1.min.js"></script>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
        <style>
 
+        .bodyLight
+        {
+            background-color:  white;
+            color: #0F1220;
+        }
 
-        body
+        .bodyDark
         {
             background-color: #0F1220;
             color: white;
+        }
+
+        body
+        {
             height: 100%;
         }
         html, body {
             overflow: auto;
         }
+
         .arrow
         {
            color: #EC6022;
@@ -37,10 +48,10 @@
             margin-right: auto;
             width: 50%;
         }
+
         </style>
     </head>
-    <body>
-        
+    <body class="bodyDark">
        
         <div class="container">
             <a href=""> 
@@ -58,7 +69,7 @@
                                 <p id="price_tag"> </p>
                         </div>
                         <button id="tip_button" type="button" class="btn btn-outline-primary btn-lg" >Pay !</button>
-                        <br/><br/>
+                        <br/>
         
                         <div id="content_container">
                                 <br>

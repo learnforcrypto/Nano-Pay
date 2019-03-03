@@ -3,10 +3,14 @@
 
   "name": "Nano Pay",
   "description": "A extension that let you see which nano address is present on your browser and allow you to pay fast via Brainblocks service",
-  "version": "0.2",
-  "permissions": ["tabs", "<all_urls>", "clipboardWrite","clipboardRead"],
+  "version": "0.4",
+  "permissions": ["tabs", "<all_urls>", "clipboardWrite","clipboardRead", "storage"],
   "icons": {
     "128": "nano_icon.png"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
   },
   "content_security_policy": "script-src 'self' https://brainblocks.io/brainblocks.min.js; object-src 'self'",
   "browser_action": {

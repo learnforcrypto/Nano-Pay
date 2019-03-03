@@ -130,7 +130,7 @@ function UpdateMessage()
     message.innerHTML += "<br>" + (selectedAddress + 1 ) + "/" + listAddress.length;
     if(listAddress[selectedAddress])
     {
-        document.getElementsByTagName("body")[0].setAttribute("style","min-width:500px;");
+        document.getElementsByTagName("body")[0].setAttribute("style","min-width:475px;");
     }
 
     document.getElementById("messageLink").addEventListener("click", HandleAddressClick);
@@ -235,6 +235,96 @@ function hideStuff(){
     });
 }
 
+
+function DislpayQRCode(address)
+{
+    let buttonElement = document.getElementById("nano-button");
+
+    let addressDiv = document.createElement("div");
+    let addressContent = document.createTextNode(address); 
+    let br = document.createElement("br");
+
+    addressDiv.appendChild(addressContent);
+    addressDiv.appendChild(br);
+
+    buttonElement.appendChild(addressDiv);
+    buttonElement.appendChild(br);
+
+    var el = kjua({
+        // render method: 'canvas' or 'image'
+        render: 'image',
+    
+        // render pixel-perfect lines
+        crisp: true,
+
+        label: 'Nano',
+    
+        // minimum version: 1..40
+        minVersion: 1,
+    
+        // error correction level: 'L', 'M', 'Q' or 'H'
+        ecLevel: 'H',
+    
+        // size in pixel
+        size: 250,
+    
+        // pixel-ratio, null for devicePixelRatio
+        ratio: null,
+    
+        // code color
+        fill: '#0F1220',
+    
+        // background color
+        back: '#fff',
+    
+        // content
+        text: address,
+    
+        // roundend corners in pc: 0..100
+        rounded: 100,
+    
+        // quiet zone in modules
+        quiet: 0,
+    
+        // modes: 'plain', 'label' or 'image'
+        mode: 'label',
+    
+        fontname: 'sans',
+        fontcolor: '#EC6022',
+    
+        // image element
+        image: null
+    });
+
+    buttonElement.appendChild(el);
+}
+
+function DisplayBrainblocks(nanoAmount,address)
+{
+    let nanoToRai = nanoAmount * 1000000;
+
+    // Render the Nano button
+    brainblocks.Button.render({
+            
+        // Pass in payment options
+        payment: {
+            currency: 'rai',
+            amount: nanoToRai,
+            destination: listAddress[selectedAddress]
+        },
+
+        // Handle successful payments
+        onPayment: function(data) {
+            // 4. Call BrainBlocks API to verify data.token
+            // See tab #2
+        }
+    }, '#nano-button');
+
+}
+
+let brainblocksOption = false;
+let themeOption = 'dark';
+
 function TipButtonPressed()
 {
     if(listAddress.length > 0 && listAddress[selectedAddress] && !IsFalseNanoAddress(listAddress[selectedAddress]) && DoesAddressExistOnNetwork(listAddress[selectedAddress]) )
@@ -243,30 +333,21 @@ function TipButtonPressed()
         if(nbreNano >= 0.000001)
         {
 
-            let nanoToRai = nbreNano * 1000000;
+            switch(brainblocksOption)
+            {
+                case false: 
+                   DislpayQRCode(listAddress[selectedAddress]);
+                break;
 
-            // Render the Nano button
-            brainblocks.Button.render({
-                    
-                // Pass in payment options
-                payment: {
-                    currency: 'rai',
-                    amount: nanoToRai,
-                    destination: listAddress[selectedAddress]
-                },
-
-                // Handle successful payments
-                onPayment: function(data) {
-                    // 4. Call BrainBlocks API to verify data.token
-                    // See tab #2
-                }
-                }, '#nano-button');
-
+                case true:
+                   DisplayBrainblocks(nbreNano,listAddress[selectedAddress]);
+                break;
+            }
 
             // Change window size
             document.getElementsByTagName("body")[0].setAttribute("style","min-width:230px;");
 
-            // Make sure brainblocks button is visible
+            // Make sure  button is visible
             let brainblocksButton = document.getElementById("nano-button");
             brainblocksButton.style.display = 'block';
             hideStuff();
@@ -274,8 +355,40 @@ function TipButtonPressed()
     }
 }
 
+function SetTheme()
+{  
+    if(themeOption == "light")
+    {
+        let body =   document.getElementsByTagName("body")[0];
+        body.classList.remove("bodyDark");
+        body.classList.add("bodyLight");
+    }
+}
 
+function HandleAmount()
+{
+    if(brainblocksOption == false)
+    {
+        // cache le input amount
+        document.getElementById("nano_amount").style.display = 'none';
+        document.getElementById("greet").style.display = 'none';
+        
+        // Set une valeur par default
+        document.getElementById("nano_amount").value = 1;
+    }
+}
 
+function get_options() {
+    chrome.storage.sync.get({
+        favoriteColor: 'dark',
+        brainblocks: false
+    }, function(items) {
+        themeOption = items.favoriteColor;
+        brainblocksOption = items.brainblocks;
+        SetTheme();
+        HandleAmount();
+    });
+}
 
 
 function onWindowLoad() {
@@ -299,6 +412,8 @@ function onWindowLoad() {
 
     document.getElementById("leftArrow").addEventListener("mouseover", MouseOver);
     document.getElementById("leftArrow").addEventListener("mouseout", MouseOut);
+
+    get_options();
   
     if(!init)
     {
@@ -375,3 +490,5 @@ chrome.runtime.onConnect.addListener(function(port) {
     });
 
 });
+
+
