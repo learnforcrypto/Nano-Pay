@@ -1,7 +1,7 @@
 # Nano-Pay
 
 
-  Nano pay is an extension made to facilitate sending NANO via the address you consult every day on your web browser.
+  Nano pay is an extension made to facilitate sending NANO via the address you consult on your web browser.
 
   <h2> Features :</h2> 
     - Collect the xrb_ or nano_ address it finds and your browser and list them <br/>
