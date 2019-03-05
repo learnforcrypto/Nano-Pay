@@ -4,7 +4,7 @@
   Nano pay is an extension made to facilitate sending NANO via the address you consult on your web browser.
 
   <h2> Features :</h2> 
-    - Collect the xrb_ or nano_ address it finds and your browser and list them <br/>
+    - Collect the xrb_ or nano_ address it finds in your browser and list them <br/>
     - Verify for the validity of the address before you press the Pay button <br/>
     - Options : pay via brainblocks payment processor. Two different themes ( light, dark ) <br/>
     - Click on the address the extension has found to hightlight and scroll to it <br/>
